@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CNS Secure Messaging System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <span>🛡️ CNS Secure Messaging</span>
+            <span class="brand-badge">E2EE Prototype</span>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/attacks" class="nav-link">Attack</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 480px; margin-top: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title" id="form-title">User Authentication</h2>
+                <span class="badge badge-info">PBKDF2-HMAC-SHA256</span>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <button id="tab-login" class="btn btn-primary" style="flex: 1;" onclick="switchTab('login')">Sign In</button>
+                <button id="tab-register" class="btn btn-secondary" style="flex: 1;" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="e.g. alice or bob" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <div id="auth-status" style="margin-bottom: 1rem; font-size: 0.85rem; display: none;"></div>
+
+                <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+
+            <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Quick Demo Accounts (Auto-generates if not existing):</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="flex: 1; font-size: 0.8rem;" onclick="quickLogin('alice')">👤 Sign in as Alice</button>
+                    <button class="btn btn-secondary" style="flex: 1; font-size: 0.8rem;" onclick="quickLogin('bob')">👤 Sign in as Bob</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'login';
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.getElementById('form-title').innerText = mode === 'login' ? 'User Authentication' : 'Create Secure Account';
+            document.getElementById('submit-btn').innerText = mode === 'login' ? 'Sign In' : 'Register Account';
+            document.getElementById('tab-login').className = mode === 'login' ? 'btn btn-primary' : 'btn btn-secondary';
+            document.getElementById('tab-register').className = mode === 'register' ? 'btn btn-primary' : 'btn btn-secondary';
+            hideStatus();
+        }
+
+        function showStatus(text, isError) {
+            const st = document.getElementById('auth-status');
+            st.style.display = 'block';
+            st.style.color = isError ? '#ef4444' : '#22c55e';
+            st.innerText = text;
+        }
+
+        function hideStatus() {
+            document.getElementById('auth-status').style.display = 'none';
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            const endpoint = currentMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+            try {
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    showStatus(data.message || "Success! Redirecting...", false);
+                    setTimeout(() => { window.location.href = '/chat'; }, 600);
+                } else {
+                    showStatus(data.error || "Authentication failed", true);
+                }
+            } catch (err) {
+                showStatus("Network or server error", true);
+            }
+        }
+
+        async function quickLogin(user) {
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = 'password123';
+            
+            // Try login, if fails, register
+            const loginResp = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: 'password123' })
+            });
+            const loginData = await loginResp.json();
+            if (loginData.success) {
+                window.location.href = '/chat';
+            } else {
+                await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: 'password123' })
+                });
+                window.location.href = '/chat';
+            }
+        }
+    </script>
+</body>
+</html>

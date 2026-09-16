@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure End-to-End Messaging System - CNS Project</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <span>🛡️ CNS Secure Messaging</span>
+            <span class="brand-badge">Hybrid Cryptography</span>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">Dual Simulator</a>
+            <a href="/attacks" class="nav-link">Attack</a>
+            <a href="/login" class="nav-link">Standalone Login</a>
+            <a href="https://localhost:5443" target="_blank" class="nav-btn" style="background-color: var(--success); color: #000;">🔐 Switch to HTTPS Mode</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1400px; padding: 1.5rem 1rem;">
+        <!-- Project Header -->
+        <div class="dual-header">
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);">
+                Secure End-to-End Messaging System Using Hybrid Cryptography
+            </h1>
+            <p style="color: var(--accent); font-size: 0.95rem; margin-top: 0.25rem;">
+                Implementation of Diffie–Hellman Key Exchange, AES-256 Encryption, HMAC-Based Integrity and TLS-Secured Communication
+            </p>
+        </div>
+
+        <!-- Quick Action Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1.25rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                💡 <strong>Dual-Client Live Simulator:</strong> Real-time key exchange and messaging between Alice and Bob simultaneously.
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="/chat?user=alice&peer=bob" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">↗ Alice (New Tab)</a>
+                <a href="/chat?user=bob&peer=alice" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">↗ Bob (New Tab)</a>
+                <a href="/attacks" class="btn btn-danger" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">⚡ Attack</a>
+            </div>
+        </div>
+
+        <!-- Dual Stacked Screen Frames (Alice Above, Bob Below) -->
+        <div class="dual-frames">
+            <!-- Alice Panel (Above) -->
+            <div class="dual-frame-wrapper">
+                <div class="dual-frame-title title-alice">
+                    <span>👩 Alice Client (Sender / Initiator)</span>
+                    <span style="font-size: 0.75rem; font-weight: normal; opacity: 0.9;">Client Memory: Keypair (a, A)</span>
+                </div>
+                <iframe src="/chat?user=alice&peer=bob&embedded=1" class="sim-frame"></iframe>
+            </div>
+
+            <!-- Bob Panel (Below) -->
+            <div class="dual-frame-wrapper">
+                <div class="dual-frame-title title-bob">
+                    <span>👨 Bob Client (Recipient / Responder)</span>
+                    <span style="font-size: 0.75rem; font-weight: normal; opacity: 0.9;">Client Memory: Keypair (b, B)</span>
+                </div>
+                <iframe src="/chat?user=bob&peer=alice&embedded=1" class="sim-frame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Relay messages between Alice and Bob iframes for instantaneous synchronization
+        window.addEventListener('message', (event) => {
+            if (!event.data || !event.data.type) return;
+            const frames = document.querySelectorAll('iframe.sim-frame');
+            frames.forEach(frame => {
+                try {
+                    frame.contentWindow.postMessage(event.data, '*');
+                } catch (e) {}
+            });
+        });
+    </script>
+</body>
+</html>

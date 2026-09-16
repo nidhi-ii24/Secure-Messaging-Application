@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack - CNS Project</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <span>🛡️ CNS Secure Messaging</span>
+            <span class="brand-badge">Attack</span>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dual Simulator</a>
+            <a href="/chat" class="nav-link">Live Chat</a>
+            <a href="/login" class="nav-link">Login</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.8rem; font-weight: 800;">⚡ Attack</h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 750px; margin: 0.5rem auto 0;">
+                Demonstrate the system's resilience against common cryptographic and network security threats.
+                Each test runs live cryptographic validations and outputs diagnostic packet telemetry.
+            </p>
+        </div>
+
+        <div class="attack-grid">
+            <!-- Attack 1: Plaintext Interception -->
+            <div class="attack-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">1. Eavesdropping / Sniffing</h3>
+                    <span class="badge badge-warning">Passive Attack</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Simulates network packet capture (e.g. via Wireshark) comparing unencrypted HTTP vs TLS + E2EE AES-256.
+                </p>
+                <div class="form-group">
+                    <input type="text" id="eavesdrop-input" class="form-input" value="Confidential financial transfer: $5,000 to Account #84920">
+                </div>
+                <button class="btn btn-primary" onclick="runEavesdropDemo()">Execute Sniffing Simulation</button>
+                <div id="eavesdrop-output" class="attack-output">Click "Execute" to run simulation...</div>
+            </div>
+
+            <!-- Attack 2: Message Tampering -->
+            <div class="attack-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">2. Message Tampering</h3>
+                    <span class="badge badge-danger">Active Attack</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Adversary alters one byte of ciphertext in transit. Recipient validates HMAC-SHA256 before decryption.
+                </p>
+                <div class="form-group">
+                    <input type="text" id="tamper-input" class="form-input" value="Transfer $100 to Vendor">
+                </div>
+                <button class="btn btn-danger" onclick="runTamperDemo()">Execute Tampering Attack</button>
+                <div id="tamper-output" class="attack-output">Click "Execute" to run simulation...</div>
+            </div>
+
+            <!-- Attack 3: Replay Attack -->
+            <div class="attack-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">3. Replay Attack</h3>
+                    <span class="badge badge-danger">Active Attack</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Adversary captures a legitimate encrypted message packet and re-transmits it to cause duplicate processing.
+                </p>
+                <div class="form-group">
+                    <input type="text" id="replay-input" class="form-input" value="msg-tx-auth-98172">
+                </div>
+                <button class="btn btn-danger" onclick="runReplayDemo()">Execute Replay Attack</button>
+                <div id="replay-output" class="attack-output">Click "Execute" to run simulation...</div>
+            </div>
+
+            <!-- Attack 4: Man-in-the-Middle (MITM) -->
+            <div class="attack-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">4. Man-in-the-Middle (MITM)</h3>
+                    <span class="badge badge-info">Asymmetric Defense</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Compares unauthenticated Diffie-Hellman vulnerability against RSA Digital Signature defense.
+                </p>
+                <div style="font-size: 0.8rem; color: #38bdf8; background-color: var(--code-bg); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                    Alice ➔ (Pub A signed by RSA Priv) ➔ Relay ➔ Bob
+                </div>
+                <button class="btn btn-primary" onclick="runMitmDemo()">Execute MITM & Signature Test</button>
+                <div id="mitm-output" class="attack-output">Click "Execute" to run simulation...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function runEavesdropDemo() {
+            const out = document.getElementById('eavesdrop-output');
+            out.innerText = "Simulating packet capture...";
+            const text = document.getElementById('eavesdrop-input').value;
+
+            const resp = await fetch('/api/attacks/eavesdrop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await resp.json();
+
+            out.innerText = 
+`[!] UNENCRYPTED HTTP SNIFF (Wireshark Capture):
+------------------------------------------------
+${data.insecure_http_sniff.packet_payload}
+EXPOSURE: ${data.insecure_http_sniff.vulnerability}
+
+[+] TLS 1.3 + E2EE AES-256 CAPTURE (Our System):
+------------------------------------------------
+Payload Observed: ${data.secure_e2ee_tls_sniff.packet_payload}
+PROTECTION: ${data.secure_e2ee_tls_sniff.protection}`;
+        }
+
+        async function runTamperDemo() {
+            const out = document.getElementById('tamper-output');
+            out.innerText = "Simulating bit-flipping on ciphertext...";
+            const text = document.getElementById('tamper-input').value;
+
+            const resp = await fetch('/api/attacks/tamper', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await resp.json();
+
+            out.innerText = 
+`[*] Original Plaintext: "${data.plaintext}"
+[*] Authentic Ciphertext: ${data.authentic_packet.ciphertext.substring(0, 32)}...
+[*] Authentic HMAC Tag:   ${data.authentic_packet.hmac_tag.substring(0, 24)}...
+[✓] Original HMAC Check:  ${data.authentic_packet.hmac_verified ? 'PASSED' : 'FAILED'}
+
+⚠️ ADVERSARY MODIFIES CIPHERTEXT:
+[-] Byte altered: ${data.tampered_packet.original_byte} ➔ ${data.tampered_packet.modified_byte}
+[-] Tampered Ciphertext: ${data.tampered_packet.tampered_ciphertext.substring(0, 32)}...
+[-] Expected HMAC:  ${data.tampered_packet.expected_tag_for_tampered.substring(0, 24)}...
+[-] Received Tag:   ${data.tampered_packet.received_tag.substring(0, 24)}...
+[❌] Recipient HMAC Check: ${data.tampered_packet.hmac_verified ? 'PASSED' : 'FAILED'}
+
+VERDICT: ${data.verdict}
+ACTION:  ${data.action}`;
+        }
+
+        async function runReplayDemo() {
+            const out = document.getElementById('replay-output');
+            out.innerText = "Testing anti-replay mechanism...";
+            const msgId = document.getElementById('replay-input').value;
+
+            const resp = await fetch('/api/attacks/replay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: msgId, seq_no: 104 })
+            });
+            const data = await resp.json();
+
+            out.innerText = 
+`[*] Target Message ID: ${data.message_id} (Seq: #${data.seq_no})
+
+1. Legitimate Transmission (Alice ➔ Bob):
+   Status: ${data.first_transmission.status}
+   Is Replay: ${data.first_transmission.is_replay}
+   Result: ${data.first_transmission.result}
+
+2. Attacker Intercepts and Retransmits Same Packet:
+   Status: ${data['second_transmission (adversary replay)'].status}
+   Is Replay: ${data['second_transmission (adversary replay)'].is_replay}
+   Result: ${data['second_transmission (adversary replay)'].result}
+
+[✓] DEFENSE CONFIRMED: Nonce/Message-ID tracking prevents replay attacks!`;
+        }
+
+        async function runMitmDemo() {
+            const out = document.getElementById('mitm-output');
+            out.innerText = "Simulating Diffie-Hellman MITM scenario...";
+
+            const resp = await fetch('/api/attacks/mitm', { method: 'POST' });
+            const data = await resp.json();
+
+            out.innerText = 
+`SCENARIO 1: Unauthenticated Diffie-Hellman
+---------------------------------------------
+Vulnerability: ${data.unauthenticated_dh.vulnerability}
+MITM Compromise: ${data.unauthenticated_dh.mitm_achieved ? 'SUCCEEDED (Adversary intercepted both)' : 'FAILED'}
+Analysis: ${data.unauthenticated_dh.explanation}
+
+SCENARIO 2: Authenticated DH with RSA Digital Signatures
+---------------------------------------------------------
+Genuine Public Key + Signature Verified: ${data.authenticated_dh_with_rsa_signatures.genuine_packet_verified ? 'PASSED ✓' : 'FAILED'}
+Adversary Substituted Key Verified:      ${data.authenticated_dh_with_rsa_signatures.eve_tampered_packet_verified ? 'PASSED' : 'REJECTED ❌'}
+MITM Prevented: ${data.authenticated_dh_with_rsa_signatures.mitm_prevented ? 'YES ✓' : 'NO'}
+Defense: ${data.authenticated_dh_with_rsa_signatures.explanation}`;
+        }
+    </script>
+</body>
+</html>
