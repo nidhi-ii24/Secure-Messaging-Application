@@ -1,8 +1,5 @@
 # Secure End-to-End Messaging System Using Hybrid Cryptography
 
-### Subtitle
-*Implementation of Diffie–Hellman Key Exchange, AES Encryption, HMAC-Based Integrity, and TLS-Secured Communication*
-
 ---
 
 ## 1. Project Overview & Problem Statement
@@ -105,18 +102,7 @@ The project includes an **Interactive Attack & Defense Laboratory** (available v
 
 ---
 
-## 5. Course Outcomes (CO) Mapping
-
-| Course Outcome | Project Implementation |
-| :--- | :--- |
-| **CO1: Cryptographic algorithms, authentication and key management** | Modular implementation of AES-256, Diffie-Hellman MODP-2048, HKDF-SHA256, and PBKDF2 password hashing. |
-| **CO2: Access and security mechanisms** | User session management, role isolation, anti-replay filters, and RSA identity authentication. |
-| **CO3: Secure communication protocols** | Native TLS 1.3 / HTTPS implementation with self-signed X.509 certificates and Encrypt-then-MAC transport. |
-| **CO4: Implement and evaluate cryptographic/network security algorithms** | Complete messaging system with automated test suites (`test_crypto.py`, `test_attacks.py`) and live attack simulator. |
-
----
-
-## 6. How to Run & Verify
+## 5. How to Run & Verify
 
 ### Prerequisites
 - Python 3.10+ (Tested on Python 3.14)
@@ -158,7 +144,7 @@ Executes interactive terminal demonstrations of all 4 attack scenarios with deta
 
 ---
 
-## 7. Project Directory Structure
+## 6. Project Directory Structure
 
 ```text
 d:\CNS_Project/
