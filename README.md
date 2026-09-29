@@ -205,25 +205,3 @@ d:\CNS_Project/
     ├── test_crypto.py          # Cryptographic primitive unit tests
     └── test_attacks.py         # Attack defense and security validation tests
 ```
-
----
-
-## 8. High-Impact Viva & Examiner Cheat Sheet
-
-### Q1: Why use Diffie-Hellman instead of simply sending an AES key?
-**Answer:** Symmetric keys cannot be safely sent over an untrusted channel in plaintext. Diffie-Hellman allows Alice and Bob to independently compute the same shared secret using public values ($A = g^a \pmod p, B = g^b \pmod p$), relying on the hardness of the **Discrete Logarithm Problem (DLP)**. An eavesdropper observing only $p, g, A, B$ cannot compute $g^{ab} \pmod p$ in polynomial time.
-
-### Q2: Why can't we use the raw Diffie-Hellman output as the AES key directly?
-**Answer:** The raw DH shared secret is an integer chosen from a mathematical group and may not have uniform bit distribution. Furthermore, using the same key for both encryption and message authentication violates cryptographic key hygiene. We pass the shared secret through **HKDF-SHA256** (RFC 5869) to extract cryptographically uniform, distinct keys for AES encryption ($K_{\text{enc}}$) and HMAC integrity ($K_{\text{mac}}$).
-
-### Q3: Why use Encrypt-then-MAC instead of MAC-then-Encrypt?
-**Answer:** In **Encrypt-then-MAC** (used in our project), HMAC is computed over the ciphertext and IV. The recipient verifies the HMAC **before** attempting decryption. If an attacker modifies the ciphertext, HMAC verification immediately fails and decryption is aborted. In MAC-then-Encrypt, the recipient must decrypt before verifying the MAC, exposing the system to padding oracle attacks (e.g. Vaudenay's attack, POODLE).
-
-### Q4: Why do we need application-level E2EE if TLS/HTTPS already encrypts network traffic?
-**Answer:** TLS protects data **only in transit between client and server** (hop-by-hop). The relay server itself terminates TLS and sees plaintext if application-layer E2EE is not used. Application-layer E2EE ensures that the message remains encrypted even inside the relay server's database and memory, providing **true End-to-End confidentiality**.
-
-### Q5: How does unauthenticated Diffie-Hellman suffer from MITM, and how do digital signatures solve it?
-**Answer:** Diffie-Hellman provides confidentiality against passive eavesdroppers, but does **not provide authentication**. An active attacker (Eve) can intercept Alice's public value $A$ and replace it with $E_A$, and replace Bob's $B$ with $E_B$. To solve this, our project implements **RSA-2048 Digital Signatures**: Alice signs her public value $A$ with her private key. Eve cannot forge Alice's signature, so Bob rejects the substituted key.
-
-### Q6: How does your system defeat Replay Attacks?
-**Answer:** Each message packet is bound to a unique `message_id` (UUID), an ISO 8601 timestamp, and a monotonically increasing sequence number (`seq_no`). The HMAC tag authenticates all three fields alongside the IV and ciphertext. The server and client record processed message IDs and reject duplicates or expired timestamps.
